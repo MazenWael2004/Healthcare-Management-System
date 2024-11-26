@@ -6,6 +6,12 @@ class Doctor{
     char Name[30];
     char Address[30];
 public:
+    Doctor(char* id,char* name,char* address){
+        this->ID = id;
+        this->Name = name;
+        this->Address = address;
+    }
+    
     char* getID(){
         return ID;
     }
@@ -23,6 +29,13 @@ class Appointment{
     char Date[30];
     char Doctor_ID[15];
 public:
+    
+    Appointment(char* id,char* date,char* doctor_id){
+        this->ID = id;
+        this->Date = date;
+        this->Doctor_ID = doctor_id;
+    }
+    
     char* getID(){
         return ID;
     }
