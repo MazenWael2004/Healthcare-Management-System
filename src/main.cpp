@@ -80,12 +80,12 @@ int main()
     bool flag = 1;
     /// Opening all data files.
     fstream DoctorDataFile,AppointmentDataFile,PrimaryForDoctorID,PrimaryForAppointmentID,SecondaryForDoctorID,SecondaryForDoctorName;
-    DoctorDataFile.open("Doctor_DataFile.txt",ios::out | ios:: in | ios:: app);
-    AppointmentDataFile.open("Appointment_DataFile.txt",ios::out | ios:: in |  ios:: app);
-    PrimaryForDoctorID.open("PrimaryIndexForDoctorID.txt", ios::out | ios:: in |  ios:: app);
-    PrimaryForAppointmentID.open("PrimaryIndexForAppointmentID.txt", ios::out | ios:: in |  ios:: app);
-    SecondaryForDoctorID.open("SecondaryIndexForDoctorID.txt", ios::out | ios:: in |  ios:: app);
-    SecondaryForDoctorName.open("SecondaryIndexForDoctorName.txt",ios::out | ios:: in |  ios:: app);
+    DoctorDataFile.open("data\\Doctor_DataFile.txt",ios::out | ios:: in | ios:: app);
+    AppointmentDataFile.open("data\\Appointment_DataFile.txt",ios::out | ios:: in |  ios:: app);
+    PrimaryForDoctorID.open("indexes\\primary\\PrimaryIndexForDoctorID.txt", ios::out | ios:: in |  ios:: app);
+    PrimaryForAppointmentID.open("indexes\\primary\\PrimaryIndexForAppointmentID.txt", ios::out | ios:: in |  ios:: app);
+    SecondaryForDoctorID.open("indexes\\secondary\\SecondaryIndexForDoctorID.txt", ios::out | ios:: in |  ios:: app);
+    SecondaryForDoctorName.open("indexes\\secondary\\SecondaryIndexForDoctorName.txt",ios::out | ios:: in |  ios:: app);
     ///-------------------------------------------------------------------------------------------------------
 
 	showWelcomeMessage();
