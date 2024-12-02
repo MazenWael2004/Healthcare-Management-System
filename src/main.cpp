@@ -1,53 +1,79 @@
 #include <bits/stdc++.h>
 
 using namespace std;
-class Doctor{
-    char ID[15];
-    char Name[30];
-    char Address[30];
+class Doctor {
+	char ID[15];
+	char Name[30];
+	char Address[30];
 public:
-    Doctor(char* id,char* name,char* address){
-        this->ID = id;
-        this->Name = name;
-        this->Address = address;
-    }
-    
-    char* getID(){
-        return ID;
-    }
+	Doctor(const char* id, const char* name, const char* address) {
+		strcpy(ID, id);
+		strcpy(Name, name);
+		strcpy(Address, address);
+	}
 
-    char* getName(){
-        return Name;
-    }
+	const char* getID() const {
+		return ID;
+	}
 
-    char* getAddress(){
-        return Address;
-    }
+	const char* getName() const {
+		return Name;
+	}
+
+	const char* getAddress() const {
+		return Address;
+	}
 };
-class Appointment{
-    char ID[15];
-    char Date[30];
-    char Doctor_ID[15];
+
+class Appointment {
+	char ID[15];
+	char Date[30];
+	char Doctor_ID[15];
 public:
-    
-    Appointment(char* id,char* date,char* doctor_id){
-        this->ID = id;
-        this->Date = date;
-        this->Doctor_ID = doctor_id;
-    }
-    
-    char* getID(){
-        return ID;
-    }
+	Appointment(const char* id, const char* date, const char* doctor_id) {
+		strcpy(ID, id);
+		strcpy(Date, date);
+		strcpy(Doctor_ID, doctor_id);
+	}
 
-    char* getDate(){
-        return Date;
-    }
+	const char* getID() const {
+		return ID;
+	}
 
-    char* getDoctorID(){
-        return Doctor_ID;
-    }
+	const char* getDate() const {
+		return Date;
+	}
+
+	const char* getDoctorID() const {
+		return Doctor_ID;
+	}
 };
+
+void showWelcomeMessage() {
+	cout << "=========================================================\n";
+	cout << "==== Welcome in Health Care Management System - HCMS ====\n";
+	cout << "=========================================================\n";
+}
+
+void showMenu() {
+	cout
+	<< "\n---------------------------\n"
+	<< "Main menu\n"
+	<< "---------------------------\n"
+	<< "1)  Add New Doctor\n"
+	<< "2)  Add New Appointment\n"
+	<< "3)  Update Doctor Name\n"
+	<< "4)  Update Appointment Date\n"
+	<< "5)  Delete Appointment\n"
+	<< "6)  Delete Doctor\n"
+	<< "7)  Print Doctor info\n"
+	<< "8)  Print Appointment info\n"
+	<< "9)  Write Query\n"
+	<< "10) Exit\n"
+	<< "0) Show menu\n"
+	<< "---------------------------\n"
+	<< "Please Enter Your Choice : ";
+}
 int main()
 {
     int option;
@@ -62,21 +88,48 @@ int main()
     SecondaryForDoctorName.open("SecondaryIndexForDoctorName.txt",ios::out | ios:: in |  ios:: app);
     ///-------------------------------------------------------------------------------------------------------
 
-
+	showWelcomeMessage();
+	showMenu();
     while(flag){
-     cout << "-------------------------------------\n\n"
-			<< "1)  Add New Doctor\n"
-			<< "2)  Add New Appointment\n"
-			<< "3)  Update Doctor Name\n"
-			<< "4)  Update Appointment Date\n"
-			<< "5)  Delete Appointment\n"
-			<< "6)  Delete Doctor\n"
-			<< "7)  Print Doctor info\n"
-			<< "8)  Print Appointment info\n"
-			<< "9)  Write Query\n"
-			<< "10) Exit\n\n"
-			<< "Please Enter Your Choice : ";
-		cin >> option;
+    	cin >> option;
+    	switch (option) {
+    		case 0:
+    			showMenu();
+    		break;
+    		case 1:
+    				cout << "Add New Doctor selected.\n";
+    		break;
+    		case 2:
+    				cout << "Add New Appointment selected.\n";
+    		break;
+    		case 3:
+    				cout << "Update Doctor Name selected.\n";
+    		break;
+    		case 4:
+    				cout << "Update Appointment Date selected.\n";
+    		break;
+    		case 5:
+    				cout << "Delete Appointment selected.\n";
+    		break;
+    		case 6:
+    				cout << "Delete Doctor selected.\n";
+    		break;
+    		case 7:
+    				cout << "Print Doctor Info selected.\n";
+    		break;
+    		case 8:
+    				cout << "Print Appointment Info selected.\n";
+    		break;
+    		case 9:
+    				cout << "Write Query selected.\n";
+    		break;
+    		case 10:
+    			cout << "Exiting the program.\n";
+    			flag = false;
+    		break;
+    		default:
+    			cout << "Invalid choice. Please try again.\n";
+    	}
     }
 
 
