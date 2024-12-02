@@ -1,5 +1,8 @@
 # Ignore all exe files
 *.exe
 
+# CMake generated files
+cmake-build-debug/
+cmake-build-release/
 
 .idea/
