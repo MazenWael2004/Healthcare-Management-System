@@ -77,7 +77,7 @@ void showMenu() {
 int main()
 {
     int option;
-    bool flag = 1;
+    bool flag = true;
     /// Opening all data files.
     fstream DoctorDataFile,AppointmentDataFile,PrimaryForDoctorID,PrimaryForAppointmentID,SecondaryForDoctorID,SecondaryForDoctorName;
     DoctorDataFile.open("data\\Doctor_DataFile.txt",ios::out | ios:: in | ios:: app);
