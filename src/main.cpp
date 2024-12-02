@@ -1,53 +1,9 @@
 #include <bits/stdc++.h>
+#include "classes/Doctor/Doctor.h"
+#include "classes/Appointment/Appointment.h"
 
 using namespace std;
-class Doctor {
-	char ID[15];
-	char Name[30];
-	char Address[30];
-public:
-	Doctor(const char* id, const char* name, const char* address) {
-		strcpy(ID, id);
-		strcpy(Name, name);
-		strcpy(Address, address);
-	}
 
-	const char* getID() const {
-		return ID;
-	}
-
-	const char* getName() const {
-		return Name;
-	}
-
-	const char* getAddress() const {
-		return Address;
-	}
-};
-
-class Appointment {
-	char ID[15];
-	char Date[30];
-	char Doctor_ID[15];
-public:
-	Appointment(const char* id, const char* date, const char* doctor_id) {
-		strcpy(ID, id);
-		strcpy(Date, date);
-		strcpy(Doctor_ID, doctor_id);
-	}
-
-	const char* getID() const {
-		return ID;
-	}
-
-	const char* getDate() const {
-		return Date;
-	}
-
-	const char* getDoctorID() const {
-		return Doctor_ID;
-	}
-};
 
 void showWelcomeMessage() {
 	cout << "=========================================================\n";
