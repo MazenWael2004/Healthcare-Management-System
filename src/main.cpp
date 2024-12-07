@@ -623,8 +623,12 @@ void executeQuery(const string &query) {
 int main()
 {
     loadPrimaryIndex();
+    string query1 = "SELECT ALL FROM Doctors WHERE Doctor ID='D001';";
+    string query2 = "SELECT Doctor Name FROM Doctors WHERE Address='123 Elm St';";
     int option;
     bool flag = true;
+    string doctorId;
+    string appointmentId;
     /// Opening all data files.
     fstream DoctorDataFile,AppointmentDataFile,PrimaryForDoctorID,PrimaryForAppointmentID,SecondaryForDoctorID,SecondaryForDoctorName;
     DoctorDataFile.open("data\\Doctor_DataFile.txt",ios::out | ios:: in | ios:: app);
@@ -636,15 +640,11 @@ int main()
     ///-------------------------------------------------------------------------------------------------------
 
 	showWelcomeMessage();
-	showMenu();
-    string doctorId;
-    string appointmentId;
+
     while(flag){
+        showMenu();
     	cin >> option;
     	switch (option) {
-    		case 0:
-    			showMenu();
-    		break;
     		case 1:
     				cout << "Add New Doctor selected.\n";
     		break;
@@ -675,10 +675,8 @@ int main()
     		break;
     		case 9:
     				cout << "Write Query selected.\n";
-                    string query1 = "SELECT ALL FROM Doctors WHERE Doctor ID='D001';";
-                    string query2 = "SELECT Doctor Name FROM Doctors WHERE Address='123 Elm St';";
+                    getline(cin,query1);
                     executeQuery(query1);
-                    executeQuery(query2);
     		break;
     		case 10:
     			cout << "Exiting the program.\n";
