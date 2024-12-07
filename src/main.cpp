@@ -30,6 +30,7 @@ void showMenu() {
 	<< "---------------------------\n"
 	<< "Please Enter Your Choice : ";
 }
+
 short CntDoctorID = 0,  CntAppointmentSec = 0 , CntAppointmentID= 0,CntDoctorNameSec = 0,CntDoctorNameLL = 0;
 void InsertByPrimaryIndexDoctor(char id[],short offset){
     /// First, Convert ID into integer to easily compare.
@@ -482,23 +483,70 @@ void printDoctorByID(const string& searchID) {
     doctorFile.close();
 }
 
+
+// Add doctor
+// Not affect index yet.
+int saveDoctor(const Doctor& doctor, fstream& DoctorDataFile) {
+	DoctorDataFile.clear();
+	DoctorDataFile.seekp(0, ios::end);
+	if (DoctorDataFile) {
+		string record = string(doctor.getID()) + "|" + doctor.getName() + "|" + doctor.getAddress();
+		size_t length = record.size() + 1; // 1 is '|' after length indocator
+		DoctorDataFile << length << "|" << record << "\n";
+		return 1;
+	}
+	return 0;
+}
+
+bool isDoctorExists(const char* id, fstream& DoctorDataFile) {
+	DoctorDataFile.clear();
+	DoctorDataFile.seekg(0, ios::beg);
+
+	string line;
+	while (getline(DoctorDataFile, line)) {
+		size_t pos = line.find('|');
+		if (pos != string::npos) {
+			string doctorID = line.substr(pos + 1, strlen(id));
+			if (doctorID == id) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+int addDoctor(const char* id, const char* name, const char* address, fstream& DoctorDataFile) {
+	if (isDoctorExists(id, DoctorDataFile)) {
+		cout << "Error: Doctor with this ID already exists.\n";
+		return 0;
+	}
+
+	const Doctor doctor(id, name, address);
+	return saveDoctor(doctor, DoctorDataFile);
+}
+
+
 int main()
 {
     int option;
     bool flag = true;
     /// Opening all data files.
     fstream DoctorDataFile,AppointmentDataFile,PrimaryForDoctorID,PrimaryForAppointmentID,SecondaryForDoctorID,SecondaryForDoctorName;
-    DoctorDataFile.open("data\\Doctor_DataFile.txt",ios::out | ios:: in | ios:: app);
+    DoctorDataFile.open("..\\data\\Doctor_DataFile.txt",ios::out | ios:: in | ios:: app);
     AppointmentDataFile.open("data\\Appointment_DataFile.txt",ios::out | ios:: in |  ios:: app);
     PrimaryForDoctorID.open("indexes\\primary\\PrimaryIndexForDoctorID.txt", ios::out | ios:: in |  ios:: app);
     PrimaryForAppointmentID.open("indexes\\primary\\PrimaryIndexForAppointmentID.txt", ios::out | ios:: in |  ios:: app);
     SecondaryForDoctorID.open("indexes\\secondary\\SecondaryIndexForDoctorID.txt", ios::out | ios:: in |  ios:: app);
     SecondaryForDoctorName.open("indexes\\secondary\\SecondaryIndexForDoctorName.txt",ios::out | ios:: in |  ios:: app);
     ///-------------------------------------------------------------------------------------------------------
+	if(!DoctorDataFile) {
+		cout << "Error open doctor file!\n";
+		return -1;
+	}
 
 	showWelcomeMessage();
 	showMenu();
-    string doctorId;
+	string doctorId;
     string appointmentId;
     while(flag){
     	cin >> option;
@@ -508,6 +556,23 @@ int main()
     		break;
     		case 1:
     				cout << "Add New Doctor selected.\n";
+    	            cout << "Please enter doctor data: ID, Name and Address\n";
+    	            char id[15];
+    	            char name[30];
+    	            char address[30];
+    	            cout << "Enter ID: ";
+    	            cin.ignore();
+                    cin.getline(id, 15);
+                    cout << "Enter Name: ";
+                    cin.getline(name, 30);
+                    cout << "Enter Address: ";
+                    cin.getline(address, 30);
+    	            if(addDoctor(id, name, address, DoctorDataFile)) {
+    	                cout << "Doctor added successfully.\n";
+    	            }
+    	            else {
+    	                cout << "Unexpected error, please try again.\n";
+    	            }
     		break;
     		case 2:
     				cout << "Add New Appointment selected.\n";
@@ -544,6 +609,7 @@ int main()
     		default:
     			cout << "Invalid choice. Please try again.\n";
     	}
+        showMenu();
     }
 
 
