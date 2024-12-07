@@ -31,7 +31,7 @@ void showMenu() {
 	<< "Please Enter Your Choice : ";
 }
 
-short CntDoctorID = 0,  CntAppointmentSec = 0 , CntAppointmentID= 0,CntDoctorNameSec = 0,CntDoctorNameLL = 0;
+short CntDoctorID = 0,  CntAppointmentSec = 0 , CntAppointmentID= 0,CntDoctorNameSec = 0,CntDoctorNameLL = 0,CntDoctorIDSec = 0,CntDoctorIDLL = 0;
 void InsertByPrimaryIndexDoctor(char id[],short offset){
     /// First, Convert ID into integer to easily compare.
     fstream primaryDoctor("PrimaryIndexForDoctorID.txt",ios::in | ios::out | ios::binary);
