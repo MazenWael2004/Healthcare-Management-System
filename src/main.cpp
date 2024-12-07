@@ -417,6 +417,71 @@ void DeleteSecondaryDoctorName(char name[30])
 
 }
 
+void printAppointmentByID(const string& searchID) {
+    ifstream appointmentFile("..\\data\\Appointment_DataFile.txt");
+
+    if (!appointmentFile.is_open()) {
+        cout << "Error: Could not open Appointment Data File.\n";
+        return;
+    }
+
+    string appointmentID , appointmentDate, DoctorID;
+    bool found = false;
+    char s;
+    while (getline(appointmentFile, appointmentID ,'|') &&
+           getline(appointmentFile, appointmentDate ,'|') &&
+           getline(appointmentFile, DoctorID)) {
+        if (appointmentID == searchID) {
+            cout << "Appointment Found:\n";
+            cout << "-------------------------\n";
+            cout << "Appointment ID: " << appointmentID << "\n";
+            cout << "Appointment Date: " << appointmentDate << "\n";
+            cout << "Doctor ID: " << DoctorID << "\n";
+            cout << "-------------------------\n";
+            found = true;
+            break;
+        }
+    }
+    if(!found){
+        cout << "Doctor with ID " << searchID << " not found.\n";
+    }
+
+    appointmentFile.close();
+}
+
+void printDoctorByID(const string& searchID) {
+    ifstream doctorFile("..\\data\\Doctor_DataFile.txt");
+
+    if (!doctorFile.is_open()) {
+        cout << "Error: Could not open Doctor Data File.\n";
+        return;
+    }
+
+    string doctorID, doctorName, Address;
+    bool found = false;
+    char s;
+    while (getline(doctorFile, doctorID ,'|') &&
+           getline(doctorFile, doctorName,'|') &&
+           getline(doctorFile, Address)) {
+        if (doctorID == searchID) {
+            cout << "Doctor Found:\n";
+            cout << "-------------------------\n";
+            cout << "Doctor ID: " << doctorID << "\n"
+                 << "Name: " << doctorName << "\n"
+                 << "Address: " << Address << "\n"
+                 << "-------------------------\n";
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        cout << "Doctor with ID " << searchID << " not found.\n";
+    }
+
+    doctorFile.close();
+}
+
 int main()
 {
     int option;
@@ -433,6 +498,8 @@ int main()
 
 	showWelcomeMessage();
 	showMenu();
+    string doctorId;
+    string appointmentId;
     while(flag){
     	cin >> option;
     	switch (option) {
@@ -458,10 +525,14 @@ int main()
     				cout << "Delete Doctor selected.\n";
     		break;
     		case 7:
-    				cout << "Print Doctor Info selected.\n";
+                cout << "Print Doctor Info selected.\n";
+                cin >> doctorId;
+                printDoctorByID(doctorId);
     		break;
     		case 8:
     				cout << "Print Appointment Info selected.\n";
+                    cin >> appointmentId;
+                    printAppointmentByID(appointmentId);
     		break;
     		case 9:
     				cout << "Write Query selected.\n";
