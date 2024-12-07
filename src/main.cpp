@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
-#include "classes/Doctor/Doctor.cpp"
-#include "classes/Appointment/Appointment.cpp"
+#include "classes/Doctor/Doctor.h"
+#include "classes/Appointment/Appointment.h"
 
 using namespace std;
 
@@ -30,6 +30,8 @@ void showMenu() {
             << "---------------------------\n"
             << "Please Enter Your Choice : ";
 }
+
+vector<long> doctorAvailList; // Stores positions of deleted records
 
 short CntDoctorID = 0,  CntAppointmentSec = 0 , CntAppointmentID= 0,CntDoctorNameSec = 0,CntDoctorNameLL = 0,CntDoctorIDSec = 0,CntDoctorIDLL = 0;
 void InsertByPrimaryIndexDoctor(char id[],short offset){
@@ -620,15 +622,27 @@ void executeQuery(const string &query) {
     }
 }
 
-
+// -------------
 // Add doctor
-// Not affect index yet.
+int saveDoctorAtPosition(const Doctor& doctor, fstream& DoctorDataFile, long pos) {
+    string record = string(doctor.getID()) + "|" + doctor.getName() + "|" + doctor.getAddress();
+    size_t length = record.size() + 1; // Include '|'
+
+    DoctorDataFile.clear();
+    DoctorDataFile.seekp(pos, ios::beg);
+    if (DoctorDataFile) {
+        DoctorDataFile << length << "|" << record << "\n";
+        return 1;
+    }
+    return 0;
+}
+
 int saveDoctor(const Doctor& doctor, fstream& DoctorDataFile) {
     DoctorDataFile.clear();
     DoctorDataFile.seekp(0, ios::end);
     if (DoctorDataFile) {
         string record = string(doctor.getID()) + "|" + doctor.getName() + "|" + doctor.getAddress();
-        size_t length = record.size() + 1; // 1 is '|' after length indocator
+        size_t length = record.size() + 1; // Include '|'
         DoctorDataFile << length << "|" << record << "\n";
         return 1;
     }
@@ -641,6 +655,7 @@ bool isDoctorExists(const char* id, fstream& DoctorDataFile) {
 
     string line;
     while (getline(DoctorDataFile, line)) {
+        if (line[0] == '*') continue;
         size_t pos = line.find('|');
         if (pos != string::npos) {
             string doctorID = line.substr(pos + 1, strlen(id));
@@ -657,11 +672,72 @@ int addDoctor(const char* id, const char* name, const char* address, fstream& Do
         cout << "Error: Doctor with this ID already exists.\n";
         return 0;
     }
-
     const Doctor doctor(id, name, address);
-    return saveDoctor(doctor, DoctorDataFile);
+
+    // Use available space from the Avail List if possible
+    if (!doctorAvailList.empty()) {
+        long pos = doctorAvailList.back();
+        doctorAvailList.pop_back();
+        return saveDoctorAtPosition(doctor, DoctorDataFile, pos);
+    } else {
+        return saveDoctor(doctor, DoctorDataFile);
+    }
 }
 
+bool deleteDoctor(const char* id, fstream& DoctorDataFile) {
+    DoctorDataFile.clear();
+    DoctorDataFile.seekg(0, ios::beg);
+    string line;
+
+    while (getline(DoctorDataFile, line)) {
+        if (line[0] == '*') {
+            continue; // Skip deleted records
+        }
+
+        size_t idPos = line.find('|');
+        if (idPos != string::npos) {
+            string doctorID = line.substr(idPos + 1, line.find('|', idPos + 1) - idPos - 1);
+            if (doctorID == id) {
+                // Mark the record as deleted
+                line[0] = '*';
+                DoctorDataFile.seekp(DoctorDataFile.tellp() - line.length() - 1, ios::beg);
+                DoctorDataFile << line << endl;
+                cout << "Doctor deleted successfully.\n";
+                return true;
+            }
+        }
+    }
+    cout << "Error: Doctor not found.\n";
+    return false;
+}
+
+bool updateDoctorName(const char* id, const char* newName, fstream& DoctorDataFile) {
+    DoctorDataFile.clear();
+    DoctorDataFile.seekg(0, ios::beg);
+    string line;
+
+    while (getline(DoctorDataFile, line)) {
+        if (line[0] == '*') {
+            continue; // Skip deleted records
+        }
+
+        size_t idPos = line.find('|');
+        if (idPos != string::npos) {
+            string doctorID = line.substr(idPos + 1, line.find('|', idPos + 1) - idPos - 1);
+            if (doctorID == id) {
+                size_t namePos = line.find('|', idPos + strlen(id) + 1);
+                line.replace(namePos + 1, line.find('|', namePos + 1) - namePos - 1, newName);
+                DoctorDataFile.seekp(DoctorDataFile.tellp() - line.length() - 1, ios::beg);
+                DoctorDataFile << line << endl;
+                cout << "Doctor name updated successfully.\n";
+                return true;
+            }
+        }
+    }
+    cout << "Error: Doctor not found.\n";
+    return false;
+}
+// ------------ END CRUD for Doctor
 
 void InsertByPrimaryIndexAppointment(char id[],short offset){
     /// First, Convert ID into integer to easily compare.
@@ -1077,7 +1153,6 @@ int main()
     }
 
     showWelcomeMessage();
-    showMenu();
     string doctorId;
     string query1 = "SELECT ALL FROM Doctors WHERE Doctor ID='D001';";
     string query2 = "SELECT Doctor Name FROM Doctors WHERE Address='123 Elm St';";
@@ -1110,7 +1185,17 @@ int main()
                 cout << "Add New Appointment selected.\n";
                 break;
             case 3:
-                cout << "Update Doctor Name selected.\n";
+                    cout << "Update Doctor Name selected.\n";
+                    cout << "Enter ID: ";
+                    cin.ignore();
+                    cin.getline(id, 15);
+                    cout << "Enter New Name: ";
+                    cin.getline(name, 30);
+                    if (updateDoctorName(id, name, DoctorDataFile)) {
+                        cout << "Doctor name updated successfully.\n";
+                    } else {
+                        cout << "Doctor not found.\n";
+                    }
                 break;
             case 4:
                 cout << "Update Appointment Date selected.\n";
@@ -1119,7 +1204,15 @@ int main()
                 cout << "Delete Appointment selected.\n";
                 break;
             case 6:
-                cout << "Delete Doctor selected.\n";
+                    cout << "Delete Doctor selected.\n";
+                    cout << "Enter ID: ";
+                    cin.ignore();
+                    cin.getline(id, 15);
+                    if (deleteDoctor(id, DoctorDataFile)) {
+                        cout << "Doctor deleted successfully.\n";
+                    } else {
+                        cout << "Doctor not found.\n";
+                    }
                 break;
             case 7:
                 cout << "Print Doctor Info selected.\n";
@@ -1143,7 +1236,6 @@ int main()
             default:
                 cout << "Invalid choice. Please try again.\n";
         }
-        showMenu();
     }
 
 
