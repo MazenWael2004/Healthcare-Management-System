@@ -426,10 +426,10 @@ void printAppointmentByID(const string& searchID) {
         return;
     }
 
-    string appointmentID , appointmentDate, DoctorID;
+    string lengthIndicator, appointmentID , appointmentDate, DoctorID;
     bool found = false;
-    char s;
-    while (getline(appointmentFile, appointmentID ,'|') &&
+    while (getline(appointmentFile, lengthIndicator ,'|') &&
+           getline(appointmentFile, appointmentID ,'|') &&
            getline(appointmentFile, appointmentDate ,'|') &&
            getline(appointmentFile, DoctorID)) {
         if (appointmentID == searchID) {
@@ -458,10 +458,11 @@ void printDoctorByID(const string& searchID) {
         return;
     }
 
-    string doctorID, doctorName, Address;
+    string lengthIndicator ,doctorID, doctorName, Address;
     bool found = false;
-    char s;
-    while (getline(doctorFile, doctorID ,'|') &&
+
+    while (getline(doctorFile, lengthIndicator ,'|') &&
+           getline(doctorFile, doctorID ,'|') &&
            getline(doctorFile, doctorName,'|') &&
            getline(doctorFile, Address)) {
         if (doctorID == searchID) {
@@ -483,8 +484,145 @@ void printDoctorByID(const string& searchID) {
     doctorFile.close();
 }
 
+// Initializing file paths (primary index file and data file)
+const string DOCTORS_FILE = "..\\data\\Doctor_DataFile.txt";
+const string PRIMARY_INDEX_FILE = "..\\indexes\\primary\\PrimaryIndexForDoctorID.txt";
+
+// map to store primary index file when loading
+map<string, streampos> primaryIndex;
+
+// loads primary index file into map
+void loadPrimaryIndex() {
+    primaryIndex.clear();
+    ifstream indexFile(PRIMARY_INDEX_FILE);
+    if (indexFile.is_open()) {
+        string doctorID;
+        std::streamoff offset;
+        while (indexFile >> doctorID >> offset) {
+            primaryIndex[doctorID] = offset;
+        }
+        indexFile.close();
+    }
+}
+
+// Strips strings from whitespaces
+string trim(const string &str) {
+    size_t first = str.find_first_not_of(' ');
+    size_t last = str.find_last_not_of(' ');
+    if (first == string::npos || last == string::npos) {
+        return "";
+    } else {
+        return str.substr(first, last - first + 1);
+    }
+}
+
+// decomposes the "where" clause into: field, operator, value
+pair<string, string> parseConditions(const string &whereClause) {
+    string field, value;
+    pair<string, string> condition;
+
+    field = whereClause.substr(0, whereClause.find('='));
+    value = whereClause.substr(whereClause.find('\''), whereClause.length() - whereClause.find('\''));
+    value = value.substr(1, value.length() - 2);
+    condition = make_pair(field, value);
+
+    return condition;
+}
+
+// matching records satisfying "where" clause
+bool matchConditions(const string &record, const pair<string, string> &condition) {
+    string doctorID = trim(record.substr(0, 15));
+    string doctorName = trim(record.substr(15, 30));
+    string address = trim(record.substr(45, 30));
+    if (condition.first == "Doctor ID" && doctorID != condition.second) return false;
+    if (condition.first == "Doctor Name" && doctorName != condition.second) return false;
+    if (condition.first == "Address" && address != condition.second) return false;
+    return true;
+}
+
+
+vector<string> split(const string &fields, char delimiter) {
+    vector<string> tokens;
+    size_t start = 0, end;
+
+    while ((end = fields.find(delimiter, start)) != string::npos) {
+        tokens.push_back(trim(fields.substr(start, end - start)));
+        start = end + 1;
+    }
+
+    tokens.push_back(trim(fields.substr(start)));
+
+    return tokens;
+}
+
+
+void executeQuery(const string &query) {
+    vector<string> fieldsVector;
+    string select, fields, from, table, where, whereClause;
+
+    select = query.substr(0,6);
+    fields = query.substr(7, query.find(" FROM ") - 7 );
+    fieldsVector = split(fields, ',');
+
+    from = trim(query.substr(query.find(" FROM "), 5));
+    table = trim(query.substr(query.find(" FROM ") + 6, query.find(" WHERE ") - (query.find(" FROM ") + 6) ));
+    where = trim(query.substr(query.find(" WHERE "), 6));
+
+    whereClause = trim(query.substr(query.find(" WHERE ") + 7, query.find(';') - (query.find(" WHERE ") + 7) ));
+
+    if (select != "SELECT" || from != "FROM" || where != "WHERE" || table != "Doctors") {
+        cout << "Invalid query syntax.\n";
+        return;
+    }
+
+    pair<string, string> condition = parseConditions(whereClause);
+
+    ifstream doctorsFile(DOCTORS_FILE);
+    if (doctorsFile.is_open()) {
+        string record;
+        vector<string> results;
+
+        while (getline(doctorsFile, record)) {
+            if (record[0] != '*' && matchConditions(record, condition)) {
+                if (fields == "ALL") {
+                    results.push_back(record);
+                } else {
+                    stringstream result;
+                    if (fields.find("Doctor ID") != string::npos) {
+                        string doctorID = trim(record.substr(0, 15));
+                        result << doctorID << " ";
+                    }
+                    if (fields.find("Doctor Name") != string::npos) {
+                        string doctorName = trim(record.substr(15, 30));
+                        result << doctorName << " ";
+                    }
+                    if (fields.find("Address") != string::npos) {
+                        string address = trim(record.substr(45, 30));
+                        result << address << " ";
+                    }
+
+                    results.push_back(result.str());
+                }
+            }
+        }
+        doctorsFile.close();
+
+
+        if (results.empty()) {
+            cout << "No matching records found.\n";
+        } else {
+            for (const string &res : results) {
+                cout << res << "\n";
+            }
+        }
+    } else {
+        cout << "Error: Could not open the doctors file.\n";
+    }
+}
+
 int main()
 {
+    loadPrimaryIndex();
     int option;
     bool flag = true;
     /// Opening all data files.
@@ -537,6 +675,10 @@ int main()
     		break;
     		case 9:
     				cout << "Write Query selected.\n";
+                    string query1 = "SELECT ALL FROM Doctors WHERE Doctor ID='D001';";
+                    string query2 = "SELECT Doctor Name FROM Doctors WHERE Address='123 Elm St';";
+                    executeQuery(query1);
+                    executeQuery(query2);
     		break;
     		case 10:
     			cout << "Exiting the program.\n";
