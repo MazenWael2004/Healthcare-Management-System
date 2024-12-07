@@ -15,8 +15,8 @@ public:
     const char* getName() const;
 
     const char* getAddress() const;
+
+    void printDoctorData() const;
 };
-
-
 
 #endif //DOCTOR_H
