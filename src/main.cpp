@@ -526,6 +526,400 @@ int addDoctor(const char* id, const char* name, const char* address, fstream& Do
 }
 
 
+void InsertByPrimaryIndexAppointment(char id[],short offset){
+     /// First, Convert ID into integer to easily compare.
+    fstream primaryAppointment("PrimaryIndexForAppointmentID.txt",ios::in | ios::out | ios::binary);
+
+    int ID_to_be_inserted = 0;
+    for(int i =0; id[i] != '\0'; i++){
+        ID_to_be_inserted*=10;
+        ID_to_be_inserted+=(id[i]-'0');
+    }
+
+    int temp = 0;
+    short of = 0;
+    bool check  = false;
+    if(CntAppointmentID == 0){ /// 1 ST RECORD TO BE INSERTED..
+        /// Simply Insert inside the index file.
+        primaryAppointment.seekp(0,ios::beg);
+        primaryAppointment.write((char*)&ID_to_be_inserted,sizeof(int));
+        primaryAppointment.write((char*)&offset,sizeof(short));
+        CntAppointmentID++;
+        return;
+    }
+    /// inserted in the middle
+    primaryAppointment.read((char*)&temp,sizeof(temp));
+    /// 1 2 3 4
+    /// 2.5
+    while(primaryAppointment.good()){
+        if(temp > ID_to_be_inserted){
+        check  = true;
+        primaryAppointment.seekg(-4,ios::cur); /// Save the place(offset) in which the id is inserted.
+        of = primaryAppointment.tellg();
+        break;
+        }
+        primaryAppointment.seekg(2,ios::cur); /// Skip the current offset and move to next id.
+        primaryAppointment.read((char*)&temp,sizeof(temp));
+    }
+    primaryAppointment.close();
+    primaryAppointment.open("PrimaryIndexForAppointmentID.txt",ios::in | ios::out | ios::binary);
+
+    if(!check) { /// If in the last record...
+        primaryAppointment.seekg(CntAppointmentID*6,ios::beg);
+        primaryAppointment.write((char*)&ID_to_be_inserted,sizeof(int));
+        primaryAppointment.write((char*)&offset,sizeof(short));
+        CntAppointmentID++;
+    }
+
+    else{
+        primaryAppointment.seekg((CntAppointmentID-1)*6,ios::beg); /// Cursor at the beginning of last record to store it after shifting.
+        int numend;
+        short ofend;
+        primaryAppointment.read((char*)& numend,sizeof(numend));
+        primaryAppointment.read((char*)& ofend,sizeof(ofend));
+
+        primaryAppointment.seekg(of,ios::beg); /// To the place in which to insert new id.
+
+        while(primaryAppointment.good()){  /// Time to shift numbers...
+          int tmpnum; short tmpof;
+          int tmpnum1; short tmpof1;
+          primaryAppointment.read((char*)& tmpnum,sizeof(tmpnum));
+          primaryAppointment.read((char*)& tmpof,sizeof(tmpof));
+          primaryAppointment.read((char*)& tmpnum1,sizeof(tmpnum1));
+          primaryAppointment.read((char*)& tmpof1,sizeof(tmpof1));
+          primaryAppointment.seekg(-6,ios::cur);
+           primaryAppointment.write((char*)& tmpnum,sizeof(tmpnum));
+          primaryAppointment.write((char*)& tmpof,sizeof(tmpof));
+
+        }
+        primaryAppointment.close();
+        primaryAppointment.open("PrimaryIndexForAppointmentID.txt",ios::in | ios::out | ios::binary);
+        primaryAppointment.seekg(0,ios::end);
+        primaryAppointment.write((char*)& numend,sizeof(numend)); /// Write the last record that we stored...
+        primaryAppointment.write((char*)& ofend,sizeof(ofend));
+        primaryAppointment.seekg(of,ios::beg);
+        primaryAppointment.write((char*)&ID_to_be_inserted,sizeof(int));
+        primaryAppointment.write((char*)&offset,sizeof(short));
+        CntAppointmentID++;
+
+
+    }
+}
+
+short BinarySearchAppointmentID(int id){
+    fstream primaryAppointment("PrimaryIndexForAppointmentID.txt",ios::in | ios::out | ios::binary);
+    short start = 0;
+    short end = CntAppointmentID-1;
+    int mid;
+    bool found = false;
+    int temp;
+    while(start <= end && !found){
+         mid = (start+end)/2;
+        primaryAppointment.seekg(mid*6,ios::beg);
+        primaryAppointment.read((char*)& temp,sizeof(temp)); /// Take the id of middle,then compare
+
+        if(temp == id){
+            found    = true;
+        }
+        else if(temp > id){
+            end = mid-1; /// Second half
+            }
+            else{
+                    start = mid+1; /// First Half
+            }
+    }
+
+    if(found){
+
+        short of;
+        primaryAppointment.seekg((mid*6)+4,ios::beg); /// Go to offset of found record.
+        primaryAppointment.read((char*)&of,sizeof(of));
+        primaryAppointment.close();
+        return of;
+    }
+    else{
+        short notfound = -1;
+        primaryAppointment.close();
+        return notfound;
+    }
+}
+
+void DeletePrimaryAppointment(int id){
+    fstream primaryAppointment("PrimaryIndexForAppointmentID.txt",ios::in | ios::out | ios::binary);
+    short start = 0;
+    short end = CntAppointmentID-1;
+    bool found = false;
+    short mid;
+    int temp;
+    while(start <= end && !found){
+         mid = (start+end)/2;
+        primaryAppointment.seekg(mid*6,ios::beg);
+        primaryAppointment.read((char*)& temp,sizeof(temp)); /// Take the id of middle,then compare
+
+        if(temp == id){
+            found    = true;
+        }
+        else if(temp > id){
+            end = mid-1; /// First half
+            }
+            else{
+                    start = mid+1; /// Second Half
+            }
+    }
+
+    if(found){
+        /// Go to offset of found record.
+        /// Suppose numbers 1 2 3 and you want to delete 2.
+        cout << "dELETED";
+        primaryAppointment.seekg((mid+1)*6,ios::beg); /// Go to 3
+
+        while(primaryAppointment.good()){ /// Start to shift
+                /// 1 2 3 ---> 1 3 3 ---> 1 3
+                int tmpnum; short tmpof;
+                primaryAppointment.read((char*)& tmpnum,sizeof(tmpnum));
+                primaryAppointment.read((char*)& tmpof,sizeof(tmpof));
+
+                primaryAppointment.seekg(-12,ios::cur); /// Go back two records back to 2.
+                primaryAppointment.write((char*)&tmpnum,sizeof(tmpnum));
+                primaryAppointment.write((char*)&tmpof,sizeof(tmpof)); /// make 2 = 3--> 1 3 3
+                primaryAppointment.seekg(6,ios::cur); /// go to the next number.
+
+        }
+        primaryAppointment.close();
+        CntAppointmentID--;
+
+
+    }
+    else{
+        cout << "Cannot Find Record You are looking for." << endl;
+    }
+}
+
+void insertbydoctor_id_in_appointments(char doctor_id[15], char appointment_id[15]){
+
+     fstream DoctorNameSec("SecondaryIndexForDoctorID.txt", ios::binary | ios::in | ios::out);
+    short first = 0;
+    short last = CntDoctorIDSec - 1;
+    short mid;
+    bool found = false;
+    char temp[15];
+
+    // Binary search to find if the doctor_name already exists
+    while (first <= last && !found) {
+        mid = (first + last) / 2;
+        DoctorNameSec.seekg(mid * 17, ios::beg);
+        DoctorNameSec.read((char*)&temp, sizeof(temp));
+
+      if (strcmp(temp, doctor_id) == 0)
+			found = true;
+		else if (strcmp(temp, doctor_id) == 1)
+			last = mid - 1;
+		else
+			first = mid + 1;
+    }
+
+    DoctorNameSec.close();
+
+    if (!found) {
+        if (CntDoctorIDLL == 0) { // Empty
+            // Open in append mode if file is empty
+            DoctorNameSec.open("SecondaryIndexForDoctorID.txt", ios::binary | ios::in | ios::out | ios::app);
+            DoctorNameSec.seekg(0,ios::end);
+            DoctorNameSec.write(doctor_id, 15);
+            DoctorNameSec.write((char*)&CntDoctorIDLL, sizeof(CntDoctorIDLL)); // Initial count
+            CntDoctorIDLL++;
+            DoctorNameSec.close();
+
+            // Write to linked list file
+            fstream doc_name2("LLIndexForDoctorID.txt", ios::binary | ios::in | ios::out | ios::app);
+            doc_name2.seekg(0,ios::end);
+            doc_name2.write(doctor_id, 15);
+            doc_name2.write(appointment_id, 15);
+            short nega = -1;
+            doc_name2.write((char*)&nega, sizeof(nega));
+            doc_name2.close();
+
+            CntDoctorIDLL++;
+        } else {
+            // Start shifting logic
+            short offplace = -1;
+            DoctorNameSec.open("SecondaryIndexForDoctorID.txt", ios::binary | ios::in | ios::out);
+            int i = 0;
+            DoctorNameSec.seekg(0,ios::beg);
+
+            while (i < CntDoctorIDSec) {
+                char id[15];
+                DoctorNameSec.read(id, sizeof(id));
+                if (strcmp(doctor_id, id) == -1) {
+                    offplace = DoctorNameSec.tellg();
+                    offplace -= 15; // Adjust for id size
+                    break;
+                } else {
+                    DoctorNameSec.seekg(2, ios::cur); /// mkkkkk kanet 32 Move to next name record (30 + 2 for short)
+                }
+                i++;
+            }
+            DoctorNameSec.close();
+
+            if (offplace == -1) { // If it is the biggest one
+                DoctorNameSec.open("SecondaryIndexForDoctorID.txt", ios::binary | ios::in | ios::out | ios::app);
+                DoctorNameSec.seekg(CntDoctorIDSec*17,ios::beg);
+                DoctorNameSec.write(doctor_id, 30);
+                DoctorNameSec.write((char*)&CntDoctorIDLL, sizeof(CntDoctorIDLL));
+                CntDoctorIDSec++;
+                CntDoctorIDLL++;
+                DoctorNameSec.close();
+
+                // Write to linked list file
+                fstream doctor_name2("LLIndexForDoctorID.txt", ios::binary | ios::in | ios::out | ios::app);
+                doctor_name2.seekg(0,ios::end);
+                doctor_name2.write(doctor_id, 15);
+                doctor_name2.write(appointment_id, 15);
+                short t = -1;
+                doctor_name2.write((char*)&t, sizeof(t));
+                doctor_name2.close();
+            } else {
+                // Insert somewhere in the middle
+                DoctorNameSec.open("SecondaryIndexForDoctorID.txt", ios::binary | ios::in | ios::out);
+                char idtmpend[15];
+                short offsetnameend;
+                DoctorNameSec.seekg((CntDoctorIDSec - 1) * 17, ios::beg);
+                DoctorNameSec.read(idtmpend, 15);
+                DoctorNameSec.read((char*)&offsetnameend, sizeof(offsetnameend));
+
+                char tmp1[15], tmp2[15];
+                short oftmp1, oftmp2;
+                DoctorNameSec.seekg(offplace, ios::beg);
+                DoctorNameSec.read(tmp1, 15);
+                DoctorNameSec.read((char*)&oftmp1, sizeof(oftmp1));
+
+                int i = 0;
+                while (i < CntDoctorIDSec - 1) {
+                    DoctorNameSec.read(tmp2, 15);
+                    DoctorNameSec.read((char*)&oftmp2, sizeof(oftmp2));
+                    DoctorNameSec.seekp(-17, ios::cur); // Go back to overwrite
+                    DoctorNameSec.write(tmp1, 15);
+                    DoctorNameSec.write((char*)&oftmp1, sizeof(oftmp1));
+                    oftmp1 = oftmp2;
+                    int j;
+                    for (j = 0; tmp2[j] != '\0'; j++)
+                        tmp1[j] = tmp2[j];
+                    tmp1[j] = '\0';
+                    i++;
+                }
+                DoctorNameSec.close();
+
+                DoctorNameSec.open("SecondaryIndexForDoctorID.txt", ios::binary | ios::in | ios::out);
+                DoctorNameSec.seekp(offplace, ios::beg);
+                DoctorNameSec.write(doctor_id, 15);
+                DoctorNameSec.write((char*)&CntDoctorIDLL, sizeof(CntDoctorIDLL));
+
+                DoctorNameSec.seekp(CntDoctorIDSec * 17, ios::beg);
+                DoctorNameSec.write(idtmpend, 15);
+                DoctorNameSec.write((char*)&offsetnameend, sizeof(offsetnameend));
+
+                DoctorNameSec.close();
+                CntDoctorIDSec++;
+
+                // Write to linked list file
+                fstream doctor_name2("LLIndexForDoctorID.txt", ios::binary | ios::in | ios::out | ios::app);
+                doctor_name2.seekg(0,ios::end);
+                doctor_name2.write(doctor_id, 15);
+                doctor_name2.write(appointment_id, 15);
+                short nega = -1;
+                doctor_name2.write((char*)&nega, sizeof(nega));
+                doctor_name2.close();
+                CntDoctorIDLL++;
+            }
+        }
+    } else { // if name is already there
+        short off;
+        DoctorNameSec.open("SecondaryIndexForDoctorID.txt", ios::binary | ios::in | ios::out);
+        DoctorNameSec.seekg((mid * 17) + 15, ios::beg); // Go to offset of found record
+        DoctorNameSec.read((char*)&off, sizeof(off)); // Store the offset
+        DoctorNameSec.close();
+
+        fstream doctor_name2("LLIndexForDoctorID.txt", ios::binary | ios::in | ios::out);
+        doctor_name2.seekg((mid * 32), ios::beg); // Offset of found record
+        short next = -2;
+        while (1) {
+            doctor_name2.read((char*)&next, sizeof(next)); // Get hold of pointer to check if there is another occurrence
+            if (next == -1) { // Pointer = -1
+                doctor_name2.seekg(-2, ios::cur); // Go to that name
+                doctor_name2.write((char*)&CntDoctorIDLL, sizeof(CntDoctorIDLL));
+                doctor_name2.seekg(0, ios::end);
+                doctor_name2.write(doctor_id, 15);
+                doctor_name2.write(appointment_id, 15);
+                short t = -1;
+                doctor_name2.write((char*)&t, sizeof(t));
+                break;
+            } else {
+                doctor_name2.seekg((next*32)+30, ios::beg); // Simply go to the next occurrence of the record
+            }
+        }
+
+        CntDoctorIDLL++;
+        doctor_name2.close();
+    }
+
+}
+
+void DeleteSecondaryDoctorID(char id[15])
+{
+    fstream DoctorNameSec("SecondaryIndexForDoctorID.txt", ios::binary | ios::in | ios::out);
+	short first = 0;
+	short last = CntDoctorIDSec - 1;
+	short mid;
+	bool found = false;
+	char temp[15];
+	while (first <= last && !found) /// search for it
+	{
+		mid = (first + last) / 2;
+		DoctorNameSec.seekg(mid * 17, ios::beg);
+		DoctorNameSec.read((char*)&temp, sizeof(temp));
+
+		if (strcmp(temp, id) == 0)
+			found = true;
+		else if (strcmp(temp, id) == 1)
+			last = mid - 1;
+		else
+			first = mid + 1;
+	}
+	DoctorNameSec.close();
+	if (!found)
+        return ;
+
+
+    DoctorNameSec.open("SecondaryIndexForDoctorID.txt", ios::binary | ios::in | ios::out); // open namesec 5
+
+
+        DoctorNameSec.seekg(((CntDoctorIDSec-1) * 17 ), ios::beg);
+        DoctorNameSec.seekg((mid + 17 ), ios::beg);
+
+        int i = mid/17 ;
+        while(i < CntDoctorIDSec-1)               /// start to shift
+        {
+            char tempid[15] ;
+            short tempof ;
+            DoctorNameSec.read(tempid , 15) ;
+            DoctorNameSec.read((char*)&tempof , sizeof(tempof)) ;
+
+            DoctorNameSec.seekg(-34,ios::cur) ;
+            DoctorNameSec.write(tempid , 15) ;
+            DoctorNameSec.write((char*)&tempof , sizeof(tempof)) ;
+            DoctorNameSec.seekg(17,ios::cur) ;
+            i++ ;
+        }
+        CntDoctorIDSec-- ;
+        DoctorNameSec.close() ;
+
+
+
+}
+
+
+
+
 int main()
 {
     int option;
