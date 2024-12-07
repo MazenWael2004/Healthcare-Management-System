@@ -25,7 +25,7 @@ const char* Doctor::getAddress() const {
 
 void Doctor::printDoctorData() const{
     std::cout << "Doctor Details:\n"
-    << "ID: " << ID << "\n"
-    << "Name: " << Name << "\n"
-    << "Address: " << Address << "\n";
+              << "ID: " << ID << "\n"
+              << "Name: " << Name << "\n"
+              << "Address: " << Address << "\n";
 }
