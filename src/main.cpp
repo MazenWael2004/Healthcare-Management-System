@@ -688,53 +688,39 @@ bool deleteDoctor(const char* id, fstream& DoctorDataFile) {
     DoctorDataFile.clear();
     DoctorDataFile.seekg(0, ios::beg);
     string line;
+    vector<string> lines;
+    bool found = false;
 
     while (getline(DoctorDataFile, line)) {
-        if (line[0] == '*') {
-            continue; // Skip deleted records
-        }
-
-        size_t idPos = line.find('|');
-        if (idPos != string::npos) {
-            string doctorID = line.substr(idPos + 1, line.find('|', idPos + 1) - idPos - 1);
-            if (doctorID == id) {
-                // Mark the record as deleted
-                line[0] = '*';
-                DoctorDataFile.seekp(DoctorDataFile.tellp() - line.length() - 1, ios::beg);
-                DoctorDataFile << line << endl;
-                cout << "Doctor deleted successfully.\n";
-                return true;
+        size_t firstDelimiter = line.find('|');
+        if (firstDelimiter != string::npos) {
+            size_t secondDelimiter = line.find('|', firstDelimiter + 1);
+            if (secondDelimiter != string::npos) {
+                string doctorID = line.substr(firstDelimiter + 1, secondDelimiter - firstDelimiter - 1);
+                if (doctorID == id) {
+                    // Add '*' to the line and mark it
+                    line = "*" + line;
+                    found = true;
+                }
             }
         }
+        lines.push_back(line);
     }
-    cout << "Error: Doctor not found.\n";
-    return false;
-}
 
-bool updateDoctorName(const char* id, const char* newName, fstream& DoctorDataFile) {
-    DoctorDataFile.clear();
-    DoctorDataFile.seekg(0, ios::beg);
-    string line;
+    if (found) {
+        DoctorDataFile.clear();
+        DoctorDataFile.seekp(0, ios::beg);
 
-    while (getline(DoctorDataFile, line)) {
-        if (line[0] == '*') {
-            continue; // Skip deleted records
+        for (const auto& record : lines) {
+            DoctorDataFile << record << '\n';
         }
 
-        size_t idPos = line.find('|');
-        if (idPos != string::npos) {
-            string doctorID = line.substr(idPos + 1, line.find('|', idPos + 1) - idPos - 1);
-            if (doctorID == id) {
-                size_t namePos = line.find('|', idPos + strlen(id) + 1);
-                line.replace(namePos + 1, line.find('|', namePos + 1) - namePos - 1, newName);
-                DoctorDataFile.seekp(DoctorDataFile.tellp() - line.length() - 1, ios::beg);
-                DoctorDataFile << line << endl;
-                cout << "Doctor name updated successfully.\n";
-                return true;
-            }
-        }
+        DoctorDataFile.flush();
+        cout << "Doctor record marked as deleted successfully.\n";
+        return true;
     }
-    cout << "Error: Doctor not found.\n";
+
+    cout << "Error: Doctor record not found.\n";
     return false;
 }
 // ------------ END CRUD for Doctor
@@ -1140,7 +1126,7 @@ int main()
     bool flag = true;
     /// Opening all data files.
     fstream DoctorDataFile,AppointmentDataFile,PrimaryForDoctorID,PrimaryForAppointmentID,SecondaryForDoctorID,SecondaryForDoctorName;
-    DoctorDataFile.open("..\\data\\Doctor_DataFile.txt",ios::out | ios:: in | ios:: app);
+    DoctorDataFile.open("..\\data\\Doctor_DataFile.txt",ios::in | ios:: out);
     AppointmentDataFile.open("..\\data\\Appointment_DataFile.txt",ios::out | ios:: in |  ios:: app);
     PrimaryForDoctorID.open("..\\indexes\\primary\\PrimaryIndexForDoctorID.txt", ios::out | ios:: in |  ios:: app);
     PrimaryForAppointmentID.open("..\\indexes\\primary\\PrimaryIndexForAppointmentID.txt", ios::out | ios:: in |  ios:: app);
@@ -1191,11 +1177,11 @@ int main()
                     cin.getline(id, 15);
                     cout << "Enter New Name: ";
                     cin.getline(name, 30);
-                    if (updateDoctorName(id, name, DoctorDataFile)) {
-                        cout << "Doctor name updated successfully.\n";
-                    } else {
-                        cout << "Doctor not found.\n";
-                    }
+                    // if (updateDoctorName(id, name, DoctorDataFile)) {
+                        // cout << "Doctor name updated successfully.\n";
+                    // } else {
+                        // cout << "Doctor not found.\n";
+                    // }
                 break;
             case 4:
                 cout << "Update Appointment Date selected.\n";
@@ -1232,6 +1218,7 @@ int main()
             case 10:
                 cout << "Exiting the program.\n";
                 flag = false;
+                DoctorDataFile.close();
                 break;
             default:
                 cout << "Invalid choice. Please try again.\n";
