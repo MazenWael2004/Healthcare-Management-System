@@ -30,7 +30,7 @@ bool Appointment::addAppointment(const Appointment &appointment, vector<long> &a
     }
 
     // Open the data file
-    fstream file("data\\Appointment_DataFile.txt", ios::in | ios::out | ios::app);
+    fstream file("..\\data\\Appointment_DataFile.txt", ios::in | ios::out | ios::app);
     if (!file)
     {
         cerr << "Error: Unable to open appointment data file.\n";
