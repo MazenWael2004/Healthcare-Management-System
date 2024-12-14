@@ -1372,7 +1372,7 @@ int main()
     bool flag = true;
     /// Opening all data files.
     fstream DoctorDataFile, AppointmentDataFile, PrimaryForDoctorID, PrimaryForAppointmentID, SecondaryForDoctorID, SecondaryForDoctorName;
-    DoctorDataFile.open("..\\data\\Doctor_DataFile.txt", ios::in | ios::out | ios::app);
+    DoctorDataFile.open("..\\data\\Doctor_DataFile.txt", ios::in | ios::out);
     AppointmentDataFile.open("..\\data\\Appointment_DataFile.txt", ios::out | ios::in | ios::app);
     PrimaryForDoctorID.open("..\\indexes\\primary\\PrimaryIndexForDoctorID.txt", ios::out | ios::in | ios::app);
     PrimaryForAppointmentID.open("..\\indexes\\primary\\PrimaryIndexForAppointmentID.txt", ios::out | ios::in | ios::app);

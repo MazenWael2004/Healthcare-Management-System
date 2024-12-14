@@ -92,7 +92,7 @@ bool Appointment::deleteAppointment(const char* appointmentID, vector<long>& ava
     }
 
     // Open the data file
-    fstream file("data\\Appointment_DataFile.txt", ios::in | ios::out);
+    fstream file("..\\data\\Appointment_DataFile.txt", ios::in | ios::out);
     if (!file) {
         cerr << "Error: Unable to open appointment data file.\n";
         return false;
@@ -174,7 +174,7 @@ bool Appointment::updateAppointment(const char* appointmentID, const char* newDa
     }
 
     // Open the file to update the record
-    fstream file("data\\Appointment_DataFile.txt", ios::in | ios::out | ios::binary);
+    fstream file("..\\data\\Appointment_DataFile.txt", ios::in | ios::out | ios::binary);
     if (!file)
     {
         cerr << "Error: Unable to open appointment data file.\n";
@@ -238,7 +238,7 @@ void Appointment::printAppointmentInfoByID(const char *appointmentID)
         return;
     }
 
-    fstream file("data\\Appointment_DataFile.txt", ios::in | ios::binary);
+    fstream file("..\\data\\Appointment_DataFile.txt", ios::in | ios::binary);
     if (!file)
     {
         cerr << "Error: Unable to open appointment data file.\n";
